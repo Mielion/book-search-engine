@@ -1,4 +1,5 @@
 const { User } = require("../models");
+const bookSchema = require("../models/Book.js");
 const {signToken} = require("../utils/auth.js")
 
 const resolvers = {
@@ -8,27 +9,9 @@ const resolvers = {
           return User.findOne({_id: context.user.data._id}).populate('savedBooks')
         }
       },
-    // tech: async () => {
-    //   return Tech.find({});
-    // },
-    // matchups: async (parent, { _id }) => {
-    //   const params = _id ? { _id } : {};
-    //   return Matchup.find(params);
-    // },
+
   },
   Mutation: {
-    // createMatchup: async (parent, args) => {
-    //   const matchup = await Matchup.create(args);
-    //   return matchup;
-    // },
-    // createVote: async (parent, { _id, techNum }) => {
-    //   const vote = await Matchup.findOneAndUpdate(
-    //     { _id },
-    //     { $inc: { [`tech${techNum}_votes`]: 1 } },
-    //     { new: true }
-    //   );
-    //   return vote;
-    // },
 
     login: async (parent, args) => {
       console.log(args, "args in login");
@@ -57,6 +40,51 @@ const resolvers = {
       // res.json({ token, user });
       return {token, user};
     },
+
+    saveBook: async (parent, args, context) => {
+      // console.log(args.book)
+      if(context.user) {
+        try {
+          const updatedUser = await User.findByIdAndUpdate(
+            context.user.data._id,
+            {
+              $addToSet: { savedBooks: args.book },
+            },
+            { new: true, runValidators: true }
+          );
+
+          if(!updatedUser) {
+            throw new Error('User not found');
+          }
+
+          return updatedUser;
+        } catch (error) {
+          console.error(error)
+        }
+      }
+    },
+
+    removeBook: async (parent, args, context) => {
+      if(context.user) {
+        try {
+          const updatedUser = await User.findByIdAndUpdate(
+            context.user.data._id,
+            {
+              $pull: { savedBooks: args.bookId },
+            },
+            { new: true }
+          );
+
+          if(!updatedUser) {
+            throw new Error('User not found');
+          }
+
+          return updatedUser;
+        } catch (error) {
+          console.error(error)
+        }
+      }
+    }
   },
 };
 
