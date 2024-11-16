@@ -32,14 +32,28 @@ const resolvers = {
     },
 
     addUser: async (parent, args) => {
+      // Check if user with same email already exists
+      const existingUser = await User.findOne({ email: args.email });
+      if (existingUser) {
+        throw new Error("This email is already registered.");
+      }
+    
+      // Check if user with same username already exists
+      const existingUsername = await User.findOne({ username: args.username });
+      if (existingUsername) {
+        throw new Error("This username is already taken.");
+      }
+    
+      // Proceed to create the user if no duplicates
       const user = await User.create(args);
       if (!user) {
-        throw new Error("Can't find this user")
+        throw new Error("Can't create the user");
       }
+    
       const token = signToken(user);
-      // res.json({ token, user });
-      return {token, user};
+      return { token, user };
     },
+    
 
     saveBook: async (parent, args, context) => {
       // console.log(args.book)
@@ -70,7 +84,7 @@ const resolvers = {
           const updatedUser = await User.findByIdAndUpdate(
             context.user.data._id,
             {
-              $pull: { savedBooks: args.bookId },
+              $pull: { savedBooks: { bookId: args.bookId } },
             },
             { new: true }
           );

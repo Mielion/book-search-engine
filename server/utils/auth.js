@@ -15,7 +15,7 @@ module.exports = {
     }
 
     if (!token) {
-      throw new Error("You have no token!");
+      return { user: null };
       // return res.status(400).json({ message: 'You have no token!' });
     }
 
@@ -26,6 +26,7 @@ module.exports = {
       return {user: decodedUser};
     } catch {
       console.log('Invalid token');
+      return { user: null };
       // return res.status(400).json({ message: 'invalid token!' });
     }
 
